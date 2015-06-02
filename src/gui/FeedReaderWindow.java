@@ -5,6 +5,7 @@ import java.util.List;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -13,6 +14,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
@@ -34,14 +36,19 @@ public class FeedReaderWindow {
 	private Stage stage;
 	private LoginWindow lw;
 	
+	private ListView<String> list;
+	private ListView<String > friendList;
+	
 	public FeedReaderWindow(EntityManager em, Runner runner, LoginWindow lw) {
 		this.em = em; this.runner = runner; this.lw = lw;
 		
 		setupStage();
+		refreshNews();
+		refreshFriends();
+		
 		stage.show();
 	}
 	
-	@SuppressWarnings("unchecked")
 	void setupStage() {
 		if (stage != null) return;
 		
@@ -62,32 +69,12 @@ public class FeedReaderWindow {
         Scene sc = new Scene(gridMain, 700, 1200);
         stage.setScene(sc);
         
-        Label l = new Label("Welcome, " + runner.loggedUser + "!");
+        Label l = new Label("Welcome, " + runner.loggedUser.getUsername() + "!");
         gridMain.add(l, 0, 1);
         l = new Label("Here are your news!");
         gridMain.add(l, 1, 1);
         
-        ListView<String> list = new ListView<>();
-        
-        Query getFeed = em.createQuery("SELECT item FROM NewsArticle item WHERE item.user.idUser = \'" + runner.currentId + "\'");
-    	
-    	List<NewsArticle> articleList;
-    	List<String> aux = new ArrayList<String>();
-    	ObservableList<String> items = null;
-    	
-    	try {
-    		articleList = getFeed.getResultList();
-    		for(NewsArticle f : articleList)
-    		{
-    			aux.add(f.getDescription());
-    		}
-    		items = FXCollections.observableArrayList(aux);
-    	} catch (NoResultException ex) {
-    		(new AlertWindow()).message("Could not grab news!").show();
-    	}
-    	
-    	if (items != null) 
-    		list.setItems(items);
+        list = new ListView<>();
   
         list.setPrefWidth(200);
         list.setPrefHeight(400);
@@ -97,6 +84,25 @@ public class FeedReaderWindow {
         txt.setEditable(false);
         txt.setWrapText(true);
         gridMain.add(txt, 1, 2);
+        
+        list.setOnMouseClicked(new EventHandler<MouseEvent>() {
+        	
+        	@Override
+        	public void handle (MouseEvent event)
+        	{
+        		if (txt.getText().equals("\n\n                      Click on an item in the list on the left side to read news."))
+        		{
+        			txt.setText(list.getSelectionModel().getSelectedItem().toString());
+        		}
+        		else
+        		{
+        			txt.appendText("\n\n");
+        			txt.appendText(list.getSelectionModel().getSelectedItem().toString());
+        		}
+        			
+        		
+        	}
+        });
 
         TextArea commentSection = new TextArea("Comment placeholder");
         commentSection.setEditable(false);
@@ -124,7 +130,78 @@ public class FeedReaderWindow {
         hbBtn.getChildren().add(btn);
         gridMain.add(hbBtn, 2, 2);
         
-        ListView<String > friendList = new ListView<>();
+        friendList = new ListView<>();
+        
+        friendList.setPrefWidth(150);
+        friendList.setPrefHeight(300);
+        gridMain.add(friendList, 3, 2);
+        
+        Button btn2 = new Button("Add friends");
+        HBox hbBtn2 = new HBox(10);
+        hbBtn2.setAlignment(Pos.CENTER);
+        hbBtn2.getChildren().add(btn2);
+        gridMain.add(hbBtn2, 2, 3);
+        
+        FeedReaderWindow self = this;
+        
+        btn2.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent arg0) {
+				new AddFriendsWindow(em, runner, self);
+			}
+		});
+        
+        Button btn3 = new Button("Add resource");
+        HBox hbBtn3 = new HBox(10);
+        hbBtn3.setAlignment(Pos.CENTER);
+        hbBtn3.getChildren().add(btn3);
+        gridMain.add(hbBtn3, 2, 4);
+        
+        btn3.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent arg0) {
+				new AddSourceWindow(em, runner, self);
+			}
+		});
+        
+        stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+			@Override
+			public void handle(WindowEvent arg0) {
+				lw.reset();		
+			}
+		});
+		
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void refreshNews() {
+		
+        Query getFeed = em.createQuery("SELECT item FROM NewsArticle item WHERE item.user.idUser = \'" + runner.currentId + "\'");
+    	
+    	List<NewsArticle> articleList;
+    	List<String> aux = new ArrayList<String>();
+    	ObservableList<String> items = null;
+    	
+    	try {
+    		articleList = getFeed.getResultList();
+    		for(NewsArticle f : articleList)
+    		{
+    			aux.add(f.getDescription());
+    		}
+    		items = FXCollections.observableArrayList(aux);
+    	} catch (NoResultException ex) {
+    		(new AlertWindow()).message("Could not grab news!").show();
+    	}
+    	
+    	if (items != null) 
+    		list.setItems(items);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void refreshFriends() {
+
         ObservableList<String> obsFriendList = FXCollections.observableArrayList();
         List<Friend> friendQueryResult = new ArrayList<Friend>();
                            
@@ -141,30 +218,6 @@ public class FeedReaderWindow {
         }
 
         friendList.setItems(obsFriendList);
-        friendList.setPrefWidth(150);
-        friendList.setPrefHeight(300);
-        gridMain.add(friendList, 3, 2);
-        
-        Button btn2 = new Button("Add friends");
-        HBox hbBtn2 = new HBox(10);
-        hbBtn2.setAlignment(Pos.CENTER);
-        hbBtn2.getChildren().add(btn2);
-        gridMain.add(hbBtn2, 2, 3);
-        
-        Button btn3 = new Button("Add resource");
-        HBox hbBtn3 = new HBox(10);
-        hbBtn3.setAlignment(Pos.CENTER);
-        hbBtn3.getChildren().add(btn3);
-        gridMain.add(hbBtn3, 2, 4);
-        
-        stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-			
-			@Override
-			public void handle(WindowEvent arg0) {
-				lw.reset();		
-			}
-		});
-		
 	}
 
 }

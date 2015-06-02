@@ -140,6 +140,8 @@ public class LoginWindow implements EventHandler<ActionEvent> {
 	}
 	
 	public void reset() {
+		runner.currentId = null;
+		runner.loggedUser = null;
 		userField.setText("");
 		passField.setText("");
 		stage.show();

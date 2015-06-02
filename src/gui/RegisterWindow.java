@@ -17,6 +17,7 @@ import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 
 import model.User;
 
@@ -81,22 +82,44 @@ public class RegisterWindow implements EventHandler<ActionEvent> {
 	public void handle(ActionEvent arg0) {
 		try {
 			String user = userField.getText(), pass = passField.getText();
-			System.out.println(em.getTransaction());
-			em.getTransaction().begin();
 			
-			User newUser = new User();
-			newUser.setPassword(pass);
-			newUser.setUsername(user);
+
+			Query q = em.createQuery("SELECT u FROM User u WHERE u.username =\'" + user + "\'");
 			
-			em.persist(newUser);
+			User u;
+			try {
+				u = (User) q.getSingleResult();
+			} catch (Exception e) {
+				u = null;
+			}
 			
-			em.getTransaction().commit();
-			em.close();
-			
-			showMessage("User successfully added!");
+			if (u == null) {
+				
+				em.getTransaction().begin();
+				
+				User newUser = new User();
+				newUser.setPassword(pass);
+				newUser.setUsername(user);
+				
+				em.persist(newUser);
+				
+				em.getTransaction().commit();
+				
+				showMessage("User successfully added!");
+				
+			} else {
+				(new AlertWindow()).message("This username already exists!").handle(new EventHandler<WindowEvent>() {
+					@Override
+					public void handle(WindowEvent arg0) {
+						userField.setText("");
+						passField.setText("");
+					}
+				}).show();
+			}
 		}
 		catch (Exception e) {
 			showMessage("An error has occurred!");
+			System.out.println(e);
 		}
 	}
 	
