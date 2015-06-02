@@ -1,12 +1,12 @@
 package launch;
-import gui.Login;
+import gui.Runner;
 
 public class Start {
 
 	public static void main(String[] args) {
 		
-		Login startApp = new Login();
-		startApp.startApp(args);
+		Runner app = new Runner();
+		app.startApp(args);
 
 	}
 
