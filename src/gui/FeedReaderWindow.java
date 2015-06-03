@@ -24,6 +24,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
 
+import util.PubSubHandler;
 import model.Friend;
 import model.NewsArticle;
 import model.User;
@@ -38,30 +39,38 @@ public class FeedReaderWindow {
 	private ListView<String> list;
 	private ListView<String > friendList;
 	
-	public FeedReaderWindow(Runner runner) {
-		this.runner = runner; em = runner.entityManager;
+	private AddSourceWindow addSourceWindow;
+	private AddFriendsWindow addFriendsWindow;
+	
+	public FeedReaderWindow() {
+		this.runner = Runner.getInstance(); em = runner.entityManager;
 		
 		setupStage();
 		hookEvents();
 		
 		refreshNews();
 		refreshFriends();
-		
-		stage.show();
 	}
 	
 	private void hookEvents() {
 		FeedReaderWindow self = this;
-		runner.mediator.subscribe("news.refresh", new util.EventHandler() {		
+		runner.mediator.subscribe("news.refresh", new PubSubHandler() {		
 			@Override
 			public void exec(Object... args) {
 				self.refreshNews();
 			}
 		});
-		runner.mediator.subscribe("friends.refresh", new util.EventHandler() {		
+		runner.mediator.subscribe("friends.refresh", new PubSubHandler() {		
 			@Override
 			public void exec(Object... args) {
 				self.refreshFriends();
+			}
+		});
+		runner.mediator.subscribe("user.login", new PubSubHandler() {
+			
+			@Override
+			public void exec(Object... args) {
+				stage.show();
 			}
 		});
 	}
@@ -163,7 +172,8 @@ public class FeedReaderWindow {
 
 			@Override
 			public void handle(ActionEvent arg0) {
-				new AddFriendsWindow(runner);
+				if (addFriendsWindow == null) addFriendsWindow = new AddFriendsWindow();
+				runner.mediator.publish("addfriendswindow.open");
 			}
 		});
         
@@ -177,7 +187,8 @@ public class FeedReaderWindow {
 
 			@Override
 			public void handle(ActionEvent arg0) {
-				new AddSourceWindow(runner);
+				if (addSourceWindow == null) addSourceWindow = new AddSourceWindow();
+				runner.mediator.publish("addsourceswindow.open");
 			}
 		});
         

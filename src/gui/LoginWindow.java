@@ -32,12 +32,15 @@ public class LoginWindow implements EventHandler<ActionEvent> {
 	
 	TextField userField;
 	PasswordField passField;
+	
+	RegisterWindow rw;
+	FeedReaderWindow mainWindow;
 
-	public LoginWindow(Stage stage, EntityManager em, Runner runner) {
+	public LoginWindow(Stage stage, Runner runner) {
 		stage.setTitle("Welcome");
-		
-		this.em = em;
-		this.runner = runner;
+
+		this.runner = Runner.getInstance();
+		this.em = runner.entityManager;
 		
 		hookEvents();
 		
@@ -46,14 +49,7 @@ public class LoginWindow implements EventHandler<ActionEvent> {
 	
 	private void hookEvents() {
 		LoginWindow self = this;
-		runner.mediator.subscribe("mainwindow.close", new util.EventHandler() {
-			
-			@Override
-			public void exec(Object... args) {
-				self.reset();
-			}
-		});
-		runner.mediator.subscribe("loginwindow.invalidate", new util.EventHandler() {
+		runner.mediator.subscribe(new String[]{"mainwindow.close", "loginwindow.invalidate"}, new util.PubSubHandler() {
 			
 			@Override
 			public void exec(Object... args) {
@@ -112,7 +108,8 @@ public class LoginWindow implements EventHandler<ActionEvent> {
         	@Override
         	public void handle(ActionEvent e)
         	{
-            	new RegisterWindow(em);
+            	if (rw == null) rw = new RegisterWindow();
+            	runner.mediator.publish("registerwindow.open");
         	}
         });
 
@@ -134,11 +131,13 @@ public class LoginWindow implements EventHandler<ActionEvent> {
     	try {
     		User foundUser = (User)q.getSingleResult();
     		if (foundUser != null) {
+    			runner.mediator.publish("loginwindow.invalidate");
 				runner.loggedUser = foundUser;
 				runner.currentId = foundUser.getIdUser();
-				userField.setText("");
-				passField.setText("");
-				new FeedReaderWindow(runner);
+				
+				if (mainWindow == null) mainWindow = new FeedReaderWindow();
+				runner.mediator.publish("user.login");
+				
 				stage.hide();
     		} else { throw new Exception("Still not returned any users!"); }
     	} catch (Exception ex) {

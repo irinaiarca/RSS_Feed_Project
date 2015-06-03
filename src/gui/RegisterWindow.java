@@ -23,20 +23,35 @@ import model.User;
 
 public class RegisterWindow implements EventHandler<ActionEvent> {
 	
+	private Runner runner;
 	private EntityManager em;
 	private TextField userField, passField;
 	private Stage stage;
 
-	public RegisterWindow(EntityManager em) {
-		
-		System.out.println(em);
-		this.em = em;
-		setupStage();
+	public RegisterWindow() {
+		runner = Runner.getInstance();
+		em = runner.entityManager;
 
-        stage.show();
+		setupStage();
+		hookEvents();
 	}
 	
-	void setupStage() {
+	private void hookEvents() {
+		runner.mediator.subscribe("registerwindow.open", new util.PubSubHandler() {
+			@Override
+			public void exec(Object... args) {
+				stage.show();
+			}
+		});
+		runner.mediator.subscribe("registerwindow.close", new util.PubSubHandler() {
+			@Override
+			public void exec(Object... args) {
+				stage.close();
+			}
+		});
+	}
+	
+	private void setupStage() {
 		if (stage != null) return;
 		
 		stage = new Stage();
@@ -127,7 +142,7 @@ public class RegisterWindow implements EventHandler<ActionEvent> {
 		(new AlertWindow()).message(message).handle(new EventHandler<WindowEvent>() {
 			@Override
 			public void handle(WindowEvent arg0) {
-				stage.hide();
+				runner.mediator.publish("registerwindow.close");
 			}
 		}).show();
 	}

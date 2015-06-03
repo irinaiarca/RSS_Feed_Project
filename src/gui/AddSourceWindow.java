@@ -35,12 +35,21 @@ public class AddSourceWindow {
     private ListView<String> list;
     private TextField myURL;
 
-	public AddSourceWindow(Runner runner) {
-		this.runner = runner; em = runner.entityManager;
+	public AddSourceWindow() {
+		runner = Runner.getInstance(); em = runner.entityManager;
 		
 		setupStage();
-        
-        stage.show();
+		hookEvents();
+	}
+	
+	private void hookEvents() {
+		runner.mediator.subscribe("addsourcewindow.open", new util.PubSubHandler() {
+			
+			@Override
+			public void exec(Object... args) {
+				stage.show();
+			}
+		});
 	}
 	
 	private void setupStage() {

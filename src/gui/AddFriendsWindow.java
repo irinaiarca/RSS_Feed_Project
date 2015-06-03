@@ -33,13 +33,30 @@ public class AddFriendsWindow implements EventHandler<ActionEvent> {
 	@SuppressWarnings("rawtypes")
 	private final ComboBox comboBox = new ComboBox();
 
-	public AddFriendsWindow(Runner runner) {
-		this.runner = runner; em = runner.entityManager;
+	public AddFriendsWindow() {
+		runner = Runner.getInstance(); em = runner.entityManager;
 		
 		setupStage();
+		hookEvents();
 		refreshUsers();
-		
-        stage.show();
+	}
+	
+	private void hookEvents() {
+		AddFriendsWindow self = this;
+		runner.mediator.subscribe("addfriendswindow.open", new util.PubSubHandler() {
+			
+			@Override
+			public void exec(Object... args) {
+		        stage.show();
+			}
+		});
+		runner.mediator.subscribe("addfriendswindow.refresh", new util.PubSubHandler() {
+			
+			@Override
+			public void exec(Object... args) {
+		        self.refreshUsers();
+			}
+		});
 	}
 	
 	private void setupStage() {

@@ -1,5 +1,5 @@
 package util;
 
-public interface EventHandler {
+public interface PubSubHandler {
 	public void exec(Object... args);
 }

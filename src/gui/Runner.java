@@ -11,6 +11,9 @@ import javafx.application.Application;
 import javafx.stage.Stage;
 
 public class Runner extends Application {
+	
+	private static Runner instance;
+	
     public User loggedUser;
     public Integer currentId;
     public PubSub mediator = new PubSub();
@@ -28,12 +31,21 @@ public class Runner extends Application {
     @Override
     public void start(Stage primaryStage) {
     	setUp();
-    	new LoginWindow(primaryStage, entityManager, this);
+    	new LoginWindow(primaryStage, this);
     }
     
     public void startApp(String[] args) {
     	setUp();
     	launch(args);
+    }
+    
+    public static Runner getInstance() {
+    	if (instance == null) instance = new Runner();
+    	return instance;
+    }
+    
+    public static Runner createInstance() {
+    	return getInstance();
     }
 
 }
