@@ -25,7 +25,6 @@ import model.User;
 
 public class AddFriendsWindow implements EventHandler<ActionEvent> {
 
-	private FeedReaderWindow parent;
 	private EntityManager em;
 	private Runner runner;
 	
@@ -34,8 +33,8 @@ public class AddFriendsWindow implements EventHandler<ActionEvent> {
 	@SuppressWarnings("rawtypes")
 	private final ComboBox comboBox = new ComboBox();
 
-	public AddFriendsWindow(EntityManager em, Runner runner, FeedReaderWindow parent) {
-		this.em = em; this.runner = runner; this.parent = parent;
+	public AddFriendsWindow(Runner runner) {
+		this.runner = runner; em = runner.entityManager;
 		
 		setupStage();
 		refreshUsers();
@@ -118,7 +117,7 @@ public class AddFriendsWindow implements EventHandler<ActionEvent> {
 		 em.getTransaction().commit();
 		 System.out.println("Transaction Closed");
 		 
-		 parent.refreshFriends();
+		 runner.mediator.publish("friends.refresh");
 
 		 stage.close();		
 	}

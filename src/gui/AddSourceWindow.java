@@ -29,15 +29,14 @@ public class AddSourceWindow {
 	
 	private EntityManager em;
 	private Runner runner;
-	private FeedReaderWindow parent;
 	
 	private Stage stage;
     private List<FeedMessage> feedHolder = new ArrayList<FeedMessage>();
     private ListView<String> list;
     private TextField myURL;
 
-	public AddSourceWindow(EntityManager em, Runner runner, FeedReaderWindow parent) {
-		this.em = em; this.runner = runner; this.parent = parent;
+	public AddSourceWindow(Runner runner) {
+		this.runner = runner; em = runner.entityManager;
 		
 		setupStage();
         
@@ -146,7 +145,7 @@ public class AddSourceWindow {
 	 	holder.add(newArticle.getDescription());
 	 	list.setItems(holder);
 	 	
-	 	parent.refreshNews();
+	 	runner.mediator.publish("news.refresh");
 	}
 	
 	public List<FeedMessage> addFeed(String feedURL)

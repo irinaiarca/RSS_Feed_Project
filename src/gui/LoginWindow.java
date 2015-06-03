@@ -39,10 +39,30 @@ public class LoginWindow implements EventHandler<ActionEvent> {
 		this.em = em;
 		this.runner = runner;
 		
+		hookEvents();
+		
 		setupPanel(stage);
 	}
 	
-	void setupPanel(Stage stage) {
+	private void hookEvents() {
+		LoginWindow self = this;
+		runner.mediator.subscribe("mainwindow.close", new util.EventHandler() {
+			
+			@Override
+			public void exec(Object... args) {
+				self.reset();
+			}
+		});
+		runner.mediator.subscribe("loginwindow.invalidate", new util.EventHandler() {
+			
+			@Override
+			public void exec(Object... args) {
+				self.reset();
+			}
+		});
+	}
+	
+	private void setupPanel(Stage stage) {
 		
 		this.stage = stage;
 		
@@ -111,28 +131,21 @@ public class LoginWindow implements EventHandler<ActionEvent> {
   
     	Query q = em.createQuery("SELECT usr FROM User usr WHERE usr.username=\'" + currentUser + "\' and usr.password=\'" + currentPwd + "\'");
     	    	
-    	LoginWindow self = this;
-    	
     	try {
     		User foundUser = (User)q.getSingleResult();
     		if (foundUser != null) {
-	    		(new AlertWindow()).message("You have been loged in!").handle(new EventHandler<WindowEvent>() {
-	    			@Override
-	    			public void handle(WindowEvent arg0) {
-	    				runner.loggedUser = foundUser;
-	    				runner.currentId = foundUser.getIdUser();
-	    				userField.setText("");
-	    				passField.setText("");
-	    				new FeedReaderWindow(em, runner, self);
-	    				stage.hide();
-	    			}
-	    		}).show();
+				runner.loggedUser = foundUser;
+				runner.currentId = foundUser.getIdUser();
+				userField.setText("");
+				passField.setText("");
+				new FeedReaderWindow(runner);
+				stage.hide();
     		} else { throw new Exception("Still not returned any users!"); }
     	} catch (Exception ex) {
     		(new AlertWindow()).message("No such user has been found").handle(new EventHandler<WindowEvent>() {
     			@Override
     			public void handle(WindowEvent arg0) {
-    				self.reset();
+    				runner.mediator.publish("loginwindow.invalidate");
     			}
     		}).show();
     	}

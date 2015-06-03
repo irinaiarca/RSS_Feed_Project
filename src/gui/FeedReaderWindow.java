@@ -34,22 +34,39 @@ public class FeedReaderWindow {
 	private Runner runner;
 	
 	private Stage stage;
-	private LoginWindow lw;
 	
 	private ListView<String> list;
 	private ListView<String > friendList;
 	
-	public FeedReaderWindow(EntityManager em, Runner runner, LoginWindow lw) {
-		this.em = em; this.runner = runner; this.lw = lw;
+	public FeedReaderWindow(Runner runner) {
+		this.runner = runner; em = runner.entityManager;
 		
 		setupStage();
+		hookEvents();
+		
 		refreshNews();
 		refreshFriends();
 		
 		stage.show();
 	}
 	
-	void setupStage() {
+	private void hookEvents() {
+		FeedReaderWindow self = this;
+		runner.mediator.subscribe("news.refresh", new util.EventHandler() {		
+			@Override
+			public void exec(Object... args) {
+				self.refreshNews();
+			}
+		});
+		runner.mediator.subscribe("friends.refresh", new util.EventHandler() {		
+			@Override
+			public void exec(Object... args) {
+				self.refreshFriends();
+			}
+		});
+	}
+	
+	private void setupStage() {
 		if (stage != null) return;
 		
 		stage = new Stage();
@@ -142,13 +159,11 @@ public class FeedReaderWindow {
         hbBtn2.getChildren().add(btn2);
         gridMain.add(hbBtn2, 2, 3);
         
-        FeedReaderWindow self = this;
-        
         btn2.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
 			public void handle(ActionEvent arg0) {
-				new AddFriendsWindow(em, runner, self);
+				new AddFriendsWindow(runner);
 			}
 		});
         
@@ -162,14 +177,14 @@ public class FeedReaderWindow {
 
 			@Override
 			public void handle(ActionEvent arg0) {
-				new AddSourceWindow(em, runner, self);
+				new AddSourceWindow(runner);
 			}
 		});
         
         stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
 			@Override
 			public void handle(WindowEvent arg0) {
-				lw.reset();		
+				runner.mediator.publish("mainwindow.close");	
 			}
 		});
 		

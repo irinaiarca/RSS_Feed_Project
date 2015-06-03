@@ -5,6 +5,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.PersistenceContext;
 
+import util.PubSub;
 import model.User;
 import javafx.application.Application;
 import javafx.stage.Stage;
@@ -12,12 +13,14 @@ import javafx.stage.Stage;
 public class Runner extends Application {
     public User loggedUser;
     public Integer currentId;
+    public PubSub mediator = new PubSub();
     
-    @PersistenceContext protected EntityManager entityManager;
+    @PersistenceContext public EntityManager entityManager;
 
     void setUp() {
     	if (entityManager != null) return;
     	
+    	mediator.publish("log", "something", "useless");
         EntityManagerFactory fac = Persistence.createEntityManagerFactory("RSS_feed_project");
         entityManager = fac.createEntityManager();
     }
