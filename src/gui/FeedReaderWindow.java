@@ -150,6 +150,29 @@ public class FeedReaderWindow {
         hBtn5.getChildren().add(btn5);
         gridMain.add(hBtn5, 1, 5);
         
+        btn5.setOnAction(new EventHandler<ActionEvent>() {
+        	
+        	@Override
+        	public void handle(ActionEvent arg0) {
+        		if (comment.getText().length() > 0)
+        		{
+        			Comment newComment = new Comment();
+        			newComment.setIdFriend(runner.loggedUser.getIdUser());
+        			newComment.setText(comment.getText());
+        			
+        			Query q = em.createQuery("SELECT a from NewsArticle a WHERE a.description=\'" + list.getSelectionModel().getSelectedItem().toString() + "\'");
+        			NewsArticle selectedArticle = (NewsArticle)q.getSingleResult();
+        			
+        			if (selectedArticle != null)
+        				newComment.setNewsArticle(selectedArticle);
+        			
+        			em.getTransaction().begin();
+        	    	em.persist(selectedArticle);
+        	    	em.getTransaction().commit();
+        		}
+        	}
+        });
+        
         gridMain.add(list, 0, 2);
 
         VBox hbBtn = new VBox(10);
