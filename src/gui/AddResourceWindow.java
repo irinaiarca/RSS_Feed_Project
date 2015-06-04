@@ -112,5 +112,7 @@ public class AddResourceWindow {
     	em.persist(newResource);
     	em.getTransaction().commit();
     	
+    	runner.mediator.publish("resources.add", newResource);
+    	
     }
 }

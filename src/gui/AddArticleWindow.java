@@ -3,6 +3,8 @@ package gui;
 import java.util.ArrayList;
 import java.util.List;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -21,6 +23,8 @@ import javafx.stage.Stage;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+
+import com.sun.org.apache.xpath.internal.axes.SelfIteratorNoPredicate;
 
 import model.NewsArticle;
 import model.Resource;
@@ -46,6 +50,14 @@ public class AddArticleWindow {
 	}
 	
 	private void hookEvents() {
+		AddArticleWindow self = this;
+		runner.mediator.subscribe(new String[]{"resources.add", "addsourceswindow.open"}, new util.PubSubHandler() {
+			
+			@Override
+			public void exec(Object... args) {
+				self.fillComboBox();
+			}
+		});
 		runner.mediator.subscribe("addsourceswindow.open", new util.PubSubHandler() {
 			
 			@Override
@@ -55,6 +67,7 @@ public class AddArticleWindow {
 		});
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void setupStage() {
 		if (stage != null) return;
 		
@@ -76,34 +89,38 @@ public class AddArticleWindow {
         
         Label help = new Label("Choose an URL from the list below \n and then click OK:");
         gridRSS.add(help, 0, 1);
+        
+        AddArticleWindow self = this;
 
         myURL = new ComboBox();
         myURL.setPrefWidth(400);
-        myURL.setItems(fillComboBox());
+        
+        myURL.valueProperty().addListener(new ChangeListener<String>() {
+
+			@SuppressWarnings("rawtypes")
+			@Override
+			public void changed(ObservableValue arg0, String arg1, String arg2) {
+				self.getFeedsFromResource();
+			}
+		});
+        
         gridRSS.add(myURL, 0, 2);
         
         list = new ListView<>();
         list.setPrefWidth(350);
         gridRSS.add(list, 0, 3);
         
-        Button btn = new Button("Add");
+        Button btn = new Button("Add selected item to my news list");
+        Button btn2 = new Button("Refresh");
         HBox hbBtn = new HBox(10);
         hbBtn.setAlignment(Pos.CENTER);
-        hbBtn.getChildren().add(btn);
+        hbBtn.getChildren().addAll(btn, btn2);
         gridRSS.add(hbBtn, 0, 4);
-
-        Button btn2 = new Button("Add selected item to my news list");
-        HBox hbBtn2 = new HBox(10);
-        hbBtn2.setAlignment(Pos.CENTER);
-        hbBtn2.getChildren().add(btn2);
-        gridRSS.add(hbBtn2, 1, 4);
-        
-        AddArticleWindow self = this;
 
         btn2.setOnAction(new EventHandler<ActionEvent>() {
         	@Override
         	public void handle (ActionEvent e) {
-        		self.add();
+        		self.getFeedsFromResource();
         	}
         	
         });
@@ -119,8 +136,8 @@ public class AddArticleWindow {
         
 	}
 	
-	private void add() {               		
-    		feedHolder.addAll(addFeed(myURL.getSelectionModel().selectedItemProperty().toString()));
+	private void getFeedsFromResource() {               		
+    		feedHolder.addAll(addFeed(myURL.getSelectionModel().getSelectedItem().toString()));
     		ObservableList<String> feedToChooseFrom = FXCollections.observableArrayList();
     		for(FeedMessage m : feedHolder)
     		{
@@ -131,7 +148,7 @@ public class AddArticleWindow {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private ObservableList<String> fillComboBox()
+	private ObservableList<String> getResources()
 	{
 		Query q = em.createQuery("SELECT r from Resource r WHERE r.user.idUser=" + runner.loggedUser.getIdUser());
 		List<Resource> result = new ArrayList<Resource>();
@@ -145,6 +162,11 @@ public class AddArticleWindow {
 		return fill;
 	}
 	
+	@SuppressWarnings("unchecked")
+	private void fillComboBox() {
+        myURL.setItems(getResources());
+	}
+	
 	private void addToNewsList() {
 		String selectedTitle = list.getSelectionModel().getSelectedItem();
 		FeedMessage selectedArticle = new FeedMessage();
@@ -156,23 +178,18 @@ public class AddArticleWindow {
 			}
 		}
 		
-		em.getTransaction().begin();
-		
 		NewsArticle newArticle  = new NewsArticle();
 		newArticle.setUser(runner.loggedUser);
+		
 		newArticle.setDescription(selectedArticle.getDescription());
 		newArticle.setSource(selectedArticle.getAuthor());
-		System.out.println(newArticle.getIdNews());
+		
 		System.out.println(newArticle.getUser().getIdUser());
+		System.out.println(newArticle.getIdNews());
 
-	//	em.persist(runner.loggedUser);
+		em.getTransaction().begin();
 		em.persist(newArticle);
-
 		em.getTransaction().commit();
-
-       	ObservableList<String> holder = list.getItems();
-	 	holder.add(newArticle.getDescription());
-	 	list.setItems(holder);
 	 	
 	 	runner.mediator.publish("news.refresh");
 	}
@@ -180,6 +197,7 @@ public class AddArticleWindow {
 	public List<FeedMessage> addFeed(String feedURL)
 	{
 		
+		System.out.println(feedURL);
 		FeedParser parser = new FeedParser(feedURL);
 	    Feed feed = parser.readFeed();
 	    System.out.println(feed);
