@@ -119,17 +119,7 @@ public class FeedReaderWindow {
         	@Override
         	public void handle (MouseEvent event)
         	{
-        		if (txt.getText().equals("\n\n\t\t\t\tClick on an item in the list on the left side to read news."))
-        		{
-        			txt.setText(list.getSelectionModel().getSelectedItem().toString());
-        		}
-        		else
-        		{
-        			txt.appendText("\n\n");
-        			txt.appendText(list.getSelectionModel().getSelectedItem().toString());
-        		}
-        			
-        		
+        		txt.setText(list.getSelectionModel().getSelectedItem().toString());
         	}
         });
 
