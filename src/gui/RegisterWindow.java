@@ -19,6 +19,7 @@ import javafx.stage.WindowEvent;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+import util.PubSubHandler;
 import model.User;
 
 public class RegisterWindow implements EventHandler<ActionEvent> {
@@ -37,13 +38,13 @@ public class RegisterWindow implements EventHandler<ActionEvent> {
 	}
 	
 	private void hookEvents() {
-		runner.mediator.subscribe("registerwindow.open", new util.PubSubHandler() {
+		runner.mediator.subscribe("registerwindow.open", new PubSubHandler() {
 			@Override
 			public void exec(Object... args) {
 				stage.show();
 			}
 		});
-		runner.mediator.subscribe("registerwindow.close", new util.PubSubHandler() {
+		runner.mediator.subscribe("registerwindow.close", new PubSubHandler() {
 			@Override
 			public void exec(Object... args) {
 				stage.close();

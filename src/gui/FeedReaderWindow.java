@@ -17,6 +17,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
@@ -37,7 +38,7 @@ public class FeedReaderWindow {
 	private Stage stage;
 	
 	private ListView<String> list;
-	private ListView<String > friendList;
+	private ListView<String> friendList;
 	
 	private AddSourceWindow addSourceWindow;
 	private AddFriendsWindow addFriendsWindow;
@@ -57,7 +58,8 @@ public class FeedReaderWindow {
 		runner.mediator.subscribe("news.refresh", new PubSubHandler() {		
 			@Override
 			public void exec(Object... args) {
-				self.refreshNews();
+				if (args.length == 1 && args[0] instanceof Integer) self.refreshNews((Integer) args[0]);
+				else self.refreshNews();
 			}
 		});
 		runner.mediator.subscribe("friends.refresh", new PubSubHandler() {		
@@ -149,12 +151,43 @@ public class FeedReaderWindow {
         gridMain.add(hBtn5, 1, 5);
         
         gridMain.add(list, 0, 2);
-        
-        Button btn = new Button("Look at News from friends");
-        HBox hbBtn = new HBox(10);
+
+        VBox hbBtn = new VBox(10);
         hbBtn.setAlignment(Pos.CENTER);
-        hbBtn.getChildren().add(btn);
+        Button btn = new Button("Look at news from selected friend");
+        Button btnmynews = new Button("Look at my news");
+        hbBtn.getChildren().addAll(btn, btnmynews);
         gridMain.add(hbBtn, 2, 2);
+        
+        btn.setOnAction(new EventHandler<ActionEvent>() {
+			
+			@Override
+			public void handle(ActionEvent arg0) {
+				String user = friendList.getSelectionModel().getSelectedItem();
+
+				Query q = em.createQuery("SELECT u FROM User u WHERE u.username =\'" + user + "\'");
+				
+				User u;
+				try {
+					u = (User) q.getSingleResult();
+				} catch (Exception e) {
+					u = null;
+				}
+				
+				if (u != null) {
+					runner.mediator.publish("news.refresh", u.getIdUser());
+				} else runner.mediator.publish("news.refresh");
+					
+			}
+		});
+        
+        btnmynews.setOnAction(new EventHandler<ActionEvent>() {
+			
+			@Override
+			public void handle(ActionEvent arg0) {
+				runner.mediator.publish("news.refresh");	
+			}
+		});
         
         friendList = new ListView<>();
         
@@ -201,10 +234,14 @@ public class FeedReaderWindow {
 		
 	}
 	
-	@SuppressWarnings("unchecked")
 	public void refreshNews() {
+		refreshNews(runner.currentId);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void refreshNews(Integer id) {
 		
-        Query getFeed = em.createQuery("SELECT item FROM NewsArticle item WHERE item.user.idUser = \'" + runner.currentId + "\'");
+        Query getFeed = em.createQuery("SELECT item FROM NewsArticle item WHERE item.user.idUser = \'" + id + "\'");
     	
     	List<NewsArticle> articleList;
     	List<String> aux = new ArrayList<String>();

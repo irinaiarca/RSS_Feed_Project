@@ -43,7 +43,7 @@ public class AddSourceWindow {
 	}
 	
 	private void hookEvents() {
-		runner.mediator.subscribe("addsourcewindow.open", new util.PubSubHandler() {
+		runner.mediator.subscribe("addsourceswindow.open", new util.PubSubHandler() {
 			
 			@Override
 			public void exec(Object... args) {
