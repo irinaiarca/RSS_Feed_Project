@@ -134,6 +134,7 @@ public class LoginWindow implements EventHandler<ActionEvent> {
     			runner.mediator.publish("loginwindow.invalidate");
 				runner.loggedUser = foundUser;
 				runner.currentId = foundUser.getIdUser();
+			
 				
 				if (mainWindow == null) mainWindow = new FeedReaderWindow();
 				runner.mediator.publish("user.login");
@@ -141,6 +142,7 @@ public class LoginWindow implements EventHandler<ActionEvent> {
 				stage.hide();
     		} else { throw new Exception("Still not returned any users!"); }
     	} catch (Exception ex) {
+    		
     		(new AlertWindow()).message("No such user has been found").handle(new EventHandler<WindowEvent>() {
     			@Override
     			public void handle(WindowEvent arg0) {

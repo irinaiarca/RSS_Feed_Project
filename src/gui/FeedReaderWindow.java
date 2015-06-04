@@ -24,11 +24,13 @@ import javafx.stage.WindowEvent;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
+//import javax.xml.stream.events.Comment;
 
 import util.PubSubHandler;
 import model.Friend;
 import model.NewsArticle;
 import model.User;
+import model.Comment;
 
 public class FeedReaderWindow {
 
@@ -43,6 +45,8 @@ public class FeedReaderWindow {
 	private AddArticleWindow addSourceWindow;
 	private AddFriendsWindow addFriendsWindow;
 	private AddResourceWindow addResourceWindow;
+	
+	private TextArea commentSection;
 	
 	public FeedReaderWindow() {
 		this.runner = Runner.getInstance(); em = runner.entityManager;
@@ -78,6 +82,7 @@ public class FeedReaderWindow {
 		});
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void setupStage() {
 		if (stage != null) return;
 		
@@ -106,10 +111,11 @@ public class FeedReaderWindow {
         list = new ListView<>();
   
         list.setPrefWidth(200);
-        list.setPrefHeight(400);
+        list.setPrefHeight(300);
                           
         TextArea txt = new TextArea("\n\n\t\t\t\tClick on an item in the list on the left side to read news.");
         txt.setPrefWidth(600);
+        txt.setPrefHeight(300);
         txt.setEditable(false);
         txt.setWrapText(true);
         gridMain.add(txt, 1, 2);
@@ -119,14 +125,17 @@ public class FeedReaderWindow {
         	@Override
         	public void handle (MouseEvent event)
         	{
+        		commentSection.setText("");
         		txt.setText(list.getSelectionModel().getSelectedItem().toString());
+        		populateCommentSection();
         	}
         });
 
-        TextArea commentSection = new TextArea("Comment section placeholder");
+        commentSection = new TextArea("");
         commentSection.setEditable(false);
         commentSection.setWrapText(true);
-        commentSection.setPrefHeight(100);
+        commentSection.setPrefHeight(100);        
+        
         gridMain.add(commentSection, 1, 3);
         
         TextArea comment = new TextArea("Comment box placeholder");
@@ -148,7 +157,7 @@ public class FeedReaderWindow {
         Button btn = new Button("Look at news from selected friend");
         Button btnmynews = new Button("Look at my news");
         hbBtn.getChildren().addAll(btn, btnmynews);
-        gridMain.add(hbBtn, 2, 2);
+        gridMain.add(hbBtn, 2, 4);
         
         btn.setOnAction(new EventHandler<ActionEvent>() {
 			
@@ -205,7 +214,7 @@ public class FeedReaderWindow {
         HBox hbBtn2 = new HBox(10);
         hbBtn2.setAlignment(Pos.CENTER);
         hbBtn2.getChildren().add(btn2);
-        gridMain.add(hbBtn2, 2, 4);
+        gridMain.add(hbBtn2, 2, 1);
         
         btn2.setOnAction(new EventHandler<ActionEvent>() {
 
@@ -287,6 +296,41 @@ public class FeedReaderWindow {
         }
 
         friendList.setItems(obsFriendList);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void populateCommentSection() {
+		
+		Query q = null;
+		
+		if (list.getSelectionModel().getSelectedItem() != null)
+			q = em.createQuery("SELECT a from NewsArticle a WHERE a.description=\'" + list.getSelectionModel().getSelectedItem().toString() + "\'");
+		
+		NewsArticle selectedArticle = (NewsArticle)q.getSingleResult(); 
+		
+		if (selectedArticle != null)
+			q = em.createQuery("SELECT c from Comment c WHERE c.newsArticle.idNews=" + selectedArticle.getIdNews());
+        
+        ArrayList<Comment> conversation = new ArrayList<Comment>();
+        
+        try
+        {
+        	conversation.addAll(q.getResultList());
+        }
+        catch (Exception e)
+        {
+        	System.out.println("Query error: conversation");
+        }
+        
+        if (!(conversation.isEmpty()))
+        {
+        	for(Comment c : conversation)
+        	{
+        		q = em.createQuery("SELECT u FROM User u WHERE u.idUser=" + c.getIdFriend());
+        		User friend = (User)q.getSingleResult();
+        		commentSection.appendText(friend.getUsername() + " : " + c.getText() + "\n");
+        	}
+        }
 	}
 
 }
