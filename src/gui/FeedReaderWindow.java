@@ -113,7 +113,7 @@ public class FeedReaderWindow {
         list.setPrefWidth(200);
         list.setPrefHeight(300);
                           
-        TextArea txt = new TextArea("\n\n\t\t\t\tClick on an item in the list on the left side to read news.");
+        TextArea txt = new TextArea("\n\n\t\t\t\t  Click on an item in the list on the left side to read news.");
         txt.setPrefWidth(600);
         txt.setPrefHeight(300);
         txt.setEditable(false);
