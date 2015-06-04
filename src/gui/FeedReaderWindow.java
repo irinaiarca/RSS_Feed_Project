@@ -40,8 +40,9 @@ public class FeedReaderWindow {
 	private ListView<String> list;
 	private ListView<String> friendList;
 	
-	private AddSourceWindow addSourceWindow;
+	private AddArticleWindow addSourceWindow;
 	private AddFriendsWindow addFriendsWindow;
+	private AddResourceWindow addResourceWindow;
 	
 	public FeedReaderWindow() {
 		this.runner = Runner.getInstance(); em = runner.entityManager;
@@ -118,7 +119,7 @@ public class FeedReaderWindow {
         	@Override
         	public void handle (MouseEvent event)
         	{
-        		if (txt.getText().equals("\n\n                      Click on an item in the list on the left side to read news."))
+        		if (txt.getText().equals("\n\n\t\t\t\tClick on an item in the list on the left side to read news."))
         		{
         			txt.setText(list.getSelectionModel().getSelectedItem().toString());
         		}
@@ -132,13 +133,13 @@ public class FeedReaderWindow {
         	}
         });
 
-        TextArea commentSection = new TextArea("Comment placeholder");
+        TextArea commentSection = new TextArea("Comment section placeholder");
         commentSection.setEditable(false);
         commentSection.setWrapText(true);
         commentSection.setPrefHeight(100);
         gridMain.add(commentSection, 1, 3);
         
-        TextArea comment = new TextArea("Comment placeholder");
+        TextArea comment = new TextArea("Comment box placeholder");
         comment.setEditable(true);
         comment.setWrapText(true);
         comment.setPrefHeight(30);
@@ -193,13 +194,28 @@ public class FeedReaderWindow {
         
         friendList.setPrefWidth(150);
         friendList.setPrefHeight(300);
-        gridMain.add(friendList, 3, 2);
+        gridMain.add(friendList, 2, 2);
+        
+        Button btn4 = new Button("Add RSS resources");
+        HBox hbBtn4 = new HBox(10);
+        hbBtn4.setAlignment(Pos.CENTER);
+        hbBtn4.getChildren().add(btn4);
+        gridMain.add(hbBtn4, 2, 5);
+        
+        btn4.setOnAction(new EventHandler<ActionEvent>() {
+        	
+        	@Override
+        	public void handle(ActionEvent arg0) {
+        		if (addResourceWindow == null) addResourceWindow = new AddResourceWindow();
+        		runner.mediator.publish("addresourcewindow.open");
+        	}
+        });
         
         Button btn2 = new Button("Add friends");
         HBox hbBtn2 = new HBox(10);
         hbBtn2.setAlignment(Pos.CENTER);
         hbBtn2.getChildren().add(btn2);
-        gridMain.add(hbBtn2, 2, 3);
+        gridMain.add(hbBtn2, 2, 4);
         
         btn2.setOnAction(new EventHandler<ActionEvent>() {
 
@@ -210,17 +226,17 @@ public class FeedReaderWindow {
 			}
 		});
         
-        Button btn3 = new Button("Add resource");
+        Button btn3 = new Button("Add news from RSS resource");
         HBox hbBtn3 = new HBox(10);
         hbBtn3.setAlignment(Pos.CENTER);
         hbBtn3.getChildren().add(btn3);
-        gridMain.add(hbBtn3, 2, 4);
+        gridMain.add(hbBtn3, 2, 6);
         
         btn3.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
 			public void handle(ActionEvent arg0) {
-				if (addSourceWindow == null) addSourceWindow = new AddSourceWindow();
+				if (addSourceWindow == null) addSourceWindow = new AddArticleWindow();
 				runner.mediator.publish("addsourceswindow.open");
 			}
 		});

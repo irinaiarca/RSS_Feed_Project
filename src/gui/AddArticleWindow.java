@@ -11,6 +11,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
@@ -19,13 +20,15 @@ import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 
 import model.NewsArticle;
+import model.Resource;
 import rss.model.Feed;
 import rss.model.FeedMessage;
 import rss.read.FeedParser;
 
-public class AddSourceWindow {
+public class AddArticleWindow {
 	
 	private EntityManager em;
 	private Runner runner;
@@ -33,9 +36,9 @@ public class AddSourceWindow {
 	private Stage stage;
     private List<FeedMessage> feedHolder = new ArrayList<FeedMessage>();
     private ListView<String> list;
-    private TextField myURL;
+    private ComboBox myURL;
 
-	public AddSourceWindow() {
+	public AddArticleWindow() {
 		runner = Runner.getInstance(); em = runner.entityManager;
 		
 		setupStage();
@@ -71,10 +74,12 @@ public class AddSourceWindow {
         Scene sc = new Scene(gridRSS, 500, 500);
         stage.setScene(sc);
         
-        Label help = new Label("Type or paste in the text field below \n an URL thet leads to an RSS feed:");
+        Label help = new Label("Choose an URL from the list below \n and then click OK:");
         gridRSS.add(help, 0, 1);
 
-        myURL = new TextField();
+        myURL = new ComboBox();
+        myURL.setPrefWidth(400);
+        myURL.setItems(fillComboBox());
         gridRSS.add(myURL, 0, 2);
         
         list = new ListView<>();
@@ -93,7 +98,7 @@ public class AddSourceWindow {
         hbBtn2.getChildren().add(btn2);
         gridRSS.add(hbBtn2, 1, 4);
         
-        AddSourceWindow self = this;
+        AddArticleWindow self = this;
 
         btn2.setOnAction(new EventHandler<ActionEvent>() {
         	@Override
@@ -115,7 +120,7 @@ public class AddSourceWindow {
 	}
 	
 	private void add() {               		
-    		feedHolder.addAll(addFeed(myURL.getText()));
+    		feedHolder.addAll(addFeed(myURL.getSelectionModel().selectedItemProperty().toString()));
     		ObservableList<String> feedToChooseFrom = FXCollections.observableArrayList();
     		for(FeedMessage m : feedHolder)
     		{
@@ -123,6 +128,21 @@ public class AddSourceWindow {
     		}
     		
     		list.setItems(feedToChooseFrom);
+	}
+	
+	@SuppressWarnings("unchecked")
+	private ObservableList<String> fillComboBox()
+	{
+		Query q = em.createQuery("SELECT r from Resource r WHERE r.user.idUser=" + runner.loggedUser.getIdUser());
+		List<Resource> result = new ArrayList<Resource>();
+		result.addAll(q.getResultList());
+		List<String> links = new ArrayList<String>();
+		for(Resource r : result)
+		{
+			links.add(r.getUrl());
+		}
+		ObservableList<String> fill = FXCollections.observableArrayList(links);
+		return fill;
 	}
 	
 	private void addToNewsList() {
@@ -145,7 +165,7 @@ public class AddSourceWindow {
 		System.out.println(newArticle.getIdNews());
 		System.out.println(newArticle.getUser().getIdUser());
 
-		em.persist(runner.loggedUser);
+	//	em.persist(runner.loggedUser);
 		em.persist(newArticle);
 
 		em.getTransaction().commit();

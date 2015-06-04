@@ -134,9 +134,7 @@ public class AddFriendsWindow implements EventHandler<ActionEvent> {
 		 em.getTransaction().commit();
 		 System.out.println("Transaction Closed");
 		 
-		 runner.mediator.publish("friends.refresh");
-
-		 stage.close();		
+		 runner.mediator.publish("friends.refresh");		
 	}
 
 }
