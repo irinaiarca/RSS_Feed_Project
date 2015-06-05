@@ -1,6 +1,9 @@
 package gui;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 import javafx.collections.FXCollections;
@@ -26,6 +29,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.Query;
 
 import util.PubSubHandler;
+import model.Comment;
 import model.Friend;
 import model.NewsArticle;
 import model.User;
@@ -43,6 +47,10 @@ public class FeedReaderWindow {
 	private AddArticleWindow addSourceWindow;
 	private AddFriendsWindow addFriendsWindow;
 	private AddResourceWindow addResourceWindow;
+	
+	private NewsArticle activeArticle;
+	private HashMap<String,NewsArticle> articleList;
+	private TextArea commentSection, commentBox, articleContent;
 	
 	public FeedReaderWindow() {
 		this.runner = Runner.getInstance(); em = runner.entityManager;
@@ -76,10 +84,19 @@ public class FeedReaderWindow {
 				stage.show();
 			}
 		});
+		runner.mediator.subscribe("comments.refresh", new PubSubHandler() {
+			
+			@Override
+			public void exec(Object... args) {
+				self.refreshComments();
+			}
+		});
 	}
 	
 	private void setupStage() {
 		if (stage != null) return;
+		
+		FeedReaderWindow self = this;
 		
 		stage = new Stage();
 		
@@ -108,38 +125,49 @@ public class FeedReaderWindow {
         list.setPrefWidth(200);
         list.setPrefHeight(400);
                           
-        TextArea txt = new TextArea("\n\n\t\t\t\tClick on an item in the list on the left side to read news.");
-        txt.setPrefWidth(600);
-        txt.setEditable(false);
-        txt.setWrapText(true);
-        gridMain.add(txt, 1, 2);
+        articleContent = new TextArea("\n\n\t\t\t\tClick on an item in the list on the left side to read news.");
+        articleContent.setPrefWidth(600);
+        articleContent.setEditable(false);
+        articleContent.setWrapText(true);
+        gridMain.add(articleContent, 1, 2);
         
         list.setOnMouseClicked(new EventHandler<MouseEvent>() {
         	
         	@Override
         	public void handle (MouseEvent event)
         	{
-        		txt.setText(list.getSelectionModel().getSelectedItem().toString());
+        		String content = list.getSelectionModel().getSelectedItem().toString();
+        		articleContent.setText(content);
+        		activeArticle = articleList.get(content);
+        		runner.mediator.publish("comments.refresh");
         	}
         });
 
-        TextArea commentSection = new TextArea("Comment section placeholder");
+        commentSection = new TextArea("Comment section placeholder");
         commentSection.setEditable(false);
         commentSection.setWrapText(true);
         commentSection.setPrefHeight(100);
         gridMain.add(commentSection, 1, 3);
         
-        TextArea comment = new TextArea("Comment box placeholder");
-        comment.setEditable(true);
-        comment.setWrapText(true);
-        comment.setPrefHeight(30);
-        gridMain.add(comment, 1, 4);
+        commentBox = new TextArea("Comment box placeholder");
+        commentBox.setEditable(true);
+        commentBox.setWrapText(true);
+        commentBox.setPrefHeight(30);
+        gridMain.add(commentBox, 1, 4);
         
         Button btn5 = new Button ("Post comment");
         HBox hBtn5 = new HBox(10);
         hBtn5.setAlignment(Pos.BOTTOM_LEFT);
         hBtn5.getChildren().add(btn5);
         gridMain.add(hBtn5, 1, 5);
+        
+        btn5.setOnAction(new EventHandler<ActionEvent>() {
+			
+			@Override
+			public void handle(ActionEvent arg0) {
+				addComment();
+			}
+		});
         
         gridMain.add(list, 0, 2);
 
@@ -184,7 +212,7 @@ public class FeedReaderWindow {
         
         friendList.setPrefWidth(150);
         friendList.setPrefHeight(300);
-        gridMain.add(friendList, 2, 2);
+        gridMain.add(friendList, 3, 2);
         
         Button btn4 = new Button("Add RSS resources");
         HBox hbBtn4 = new HBox(10);
@@ -249,14 +277,17 @@ public class FeedReaderWindow {
 		
         Query getFeed = em.createQuery("SELECT item FROM NewsArticle item WHERE item.user.idUser = \'" + id + "\'");
     	
-    	List<NewsArticle> articleList;
+    	List<NewsArticle> aList;
     	List<String> aux = new ArrayList<String>();
     	ObservableList<String> items = null;
     	
+    	articleList = new HashMap<String, NewsArticle>();
+    	
     	try {
-    		articleList = getFeed.getResultList();
-    		for(NewsArticle f : articleList)
+    		aList = getFeed.getResultList();
+    		for(NewsArticle f : aList)
     		{
+    			articleList.put(f.getDescription(), f);
     			aux.add(f.getDescription());
     		}
     		items = FXCollections.observableArrayList(aux);
@@ -266,6 +297,8 @@ public class FeedReaderWindow {
     	
     	if (items != null) 
     		list.setItems(items);
+    	
+    	articleContent.setText("");
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -287,6 +320,48 @@ public class FeedReaderWindow {
         }
 
         friendList.setItems(obsFriendList);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void refreshComments() {
+		if (activeArticle == null) return;
+		
+		Query q = em.createQuery("SELECT c FROM Comment c WHERE c.newsArticle.idNews = " + activeArticle.getIdNews());
+		List<Comment> comments = q.getResultList();
+		
+		String content = "";
+		
+		for (Comment c: comments) {
+			if (c.getDate() != null) {
+				content += "[" + c.getDate().getDate() + "." + c.getDate().getMonth() + " @ " + c.getDate().getHours() + ":" + c.getDate().getMinutes() +  "] ";
+			}
+			q = em.createQuery("SELECT u FROM User u WHERE u.idUser = " + c.getIdFriend());
+			try {
+				User u = (User) q.getSingleResult();
+				content += u.getUsername() + ": ";
+			} catch (Exception e) {}
+			content += c.getText() + "\n\n";
+		}
+		
+		commentSection.setText(content); 
+		commentSection.setScrollTop(Double.MAX_VALUE);
+		commentBox.setText("");
+	}
+	
+	public void addComment() {
+		if (activeArticle == null) return;
+		
+		Comment c = new Comment();
+		c.setDate(new Date());
+		c.setNewsArticle(activeArticle);
+		c.setIdFriend(runner.loggedUser.getIdUser());
+		c.setText(commentBox.getText());
+		
+		em.getTransaction().begin();
+		em.persist(c);
+		em.getTransaction().commit();
+		
+		runner.mediator.publish("comments.refresh");
 	}
 
 }
