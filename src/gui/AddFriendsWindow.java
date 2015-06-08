@@ -41,6 +41,9 @@ public class AddFriendsWindow implements EventHandler<ActionEvent> {
 		refreshUsers();
 	}
 	
+	/**
+	 * An auxiliary function that hooks certain methods to global events.
+	 */
 	private void hookEvents() {
 		AddFriendsWindow self = this;
 		runner.mediator.subscribe("addfriendswindow.open", new util.PubSubHandler() {
@@ -59,6 +62,9 @@ public class AddFriendsWindow implements EventHandler<ActionEvent> {
 		});
 	}
 	
+	/**
+	 * Verifies if the stage already exists and, if it doesn't, it creates it. If it already exists, nothing happens.
+	 */
 	private void setupStage() {
 		stage = new Stage();
  		
@@ -93,6 +99,9 @@ public class AddFriendsWindow implements EventHandler<ActionEvent> {
 	}
 	
 	@SuppressWarnings("unchecked")
+	/**
+	 * Populates list with users that can be followed (aren't already friends).
+	 */
 	public void refreshUsers() {
 		
         List<User> queryHolder = new ArrayList<User>();
@@ -114,6 +123,9 @@ public class AddFriendsWindow implements EventHandler<ActionEvent> {
 	}
 
 	@Override
+	/**
+	 * Adds the selected friend to the database and the user's friends list.
+	 */
 	public void handle(ActionEvent arg0) {
 		 String selected;
 		 Friend newFriend = new Friend(); 

@@ -49,6 +49,9 @@ public class AddArticleWindow {
 		hookEvents();
 	}
 	
+	/**
+	 * An auxiliary function that hooks certain methods to global events.
+	 */
 	private void hookEvents() {
 		AddArticleWindow self = this;
 		runner.mediator.subscribe(new String[]{"resources.add", "addsourceswindow.open"}, new util.PubSubHandler() {
@@ -68,6 +71,9 @@ public class AddArticleWindow {
 	}
 	
 	@SuppressWarnings("unchecked")
+	/**
+	 * Verifies if the stage already exists and, if it doesn't, it creates it. If it already exists, nothing happens.
+	 */
 	private void setupStage() {
 		if (stage != null) return;
 		
@@ -136,6 +142,9 @@ public class AddArticleWindow {
         
 	}
 	
+	/**
+	 * Grabs the news feed from the selected resource (URL).
+	 */
 	private void getFeedsFromResource() {               		
     		feedHolder.addAll(addFeed(myURL.getSelectionModel().getSelectedItem().toString()));
     		ObservableList<String> feedToChooseFrom = FXCollections.observableArrayList();
@@ -148,6 +157,10 @@ public class AddArticleWindow {
 	}
 	
 	@SuppressWarnings("unchecked")
+	/**
+	 * Retrieves the list of URLs that the user has saved.
+	 * @return fill List that contains all URL strings.
+	 */
 	private ObservableList<String> getResources()
 	{
 		Query q = em.createQuery("SELECT r from Resource r WHERE r.user.idUser=" + runner.loggedUser.getIdUser());
@@ -163,10 +176,16 @@ public class AddArticleWindow {
 	}
 	
 	@SuppressWarnings("unchecked")
+	/**
+	 * Populates the ComboBox with the retrieved URLs.
+	 */
 	private void fillComboBox() {
         myURL.setItems(getResources());
 	}
 	
+	/**
+	 * Saves the selected article to the database and adds it to the user's article list. 
+	 */
 	private void addToNewsList() {
 		String selectedTitle = list.getSelectionModel().getSelectedItem();
 		FeedMessage selectedArticle = new FeedMessage();
@@ -193,7 +212,11 @@ public class AddArticleWindow {
 	 	
 	 	runner.mediator.publish("news.refresh");
 	}
-	
+	/**
+	 * Parses the feed found in the URL
+	 * @param feedURL string that contains the adress to the RSS feed.
+	 * @return returnedList List of parsed articles.
+	 */
 	public List<FeedMessage> addFeed(String feedURL)
 	{
 		
@@ -204,7 +227,6 @@ public class AddArticleWindow {
 	    List<FeedMessage> returnedList = new ArrayList<FeedMessage>();
 	    for (FeedMessage message : feed.getMessages()) 
 	    {
-	      System.out.println(message);
 	      returnedList.add(message);
 
 	    }

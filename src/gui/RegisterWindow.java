@@ -37,6 +37,9 @@ public class RegisterWindow implements EventHandler<ActionEvent> {
 		hookEvents();
 	}
 	
+	/**
+	 * An auxiliary function that hooks certain methods to global events.
+	 */
 	private void hookEvents() {
 		runner.mediator.subscribe("registerwindow.open", new PubSubHandler() {
 			@Override
@@ -52,6 +55,9 @@ public class RegisterWindow implements EventHandler<ActionEvent> {
 		});
 	}
 	
+	/**
+	 * Verifies if the stage already exists and, if it doesn't, it creates it. If it already exists, nothing happens.
+	 */
 	private void setupStage() {
 		if (stage != null) return;
 		
@@ -95,11 +101,13 @@ public class RegisterWindow implements EventHandler<ActionEvent> {
 	}
 
 	@Override
+	/**
+	 * Adds a new user, unless it exists already.
+	 */
 	public void handle(ActionEvent arg0) {
 		try {
 			String user = userField.getText(), pass = passField.getText();
 			
-
 			Query q = em.createQuery("SELECT u FROM User u WHERE u.username =\'" + user + "\'");
 			
 			User u;
@@ -139,6 +147,10 @@ public class RegisterWindow implements EventHandler<ActionEvent> {
 		}
 	}
 	
+	/**
+	 * Shows an alert window that contains a message.
+	 * @param message The string that will show in the message.
+	 */
 	void showMessage(String message) {
 		(new AlertWindow()).message(message).handle(new EventHandler<WindowEvent>() {
 			@Override

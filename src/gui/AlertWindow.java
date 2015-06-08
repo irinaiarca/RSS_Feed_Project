@@ -21,6 +21,9 @@ public class AlertWindow {
 		setupStage();
 	}
 	
+	/**
+	 * Verifies if the stage already exists and, if it doesn't, it creates it. If it already exists, nothing happens.
+	 */
 	void setupStage() {
 		if (stage != null) return;
 		

@@ -41,6 +41,9 @@ public class AddResourceWindow {
     	hookEvents();
     }
     
+    /**
+     * An auxiliary function that hooks certain methods to global events.
+     */
     private void hookEvents()
     {
     	runner.mediator.subscribe("addresourcewindow.open", new util.PubSubHandler() {
@@ -53,6 +56,9 @@ public class AddResourceWindow {
     	});
     }
     
+    /**
+     * Verifies if the stage already exists and, if it doesn't, it creates it. If it already exists, nothing happens.
+     */
     private void setupStage()
     {
     	if (stage != null) return;
@@ -100,7 +106,9 @@ public class AddResourceWindow {
         	}
         });
     }
-    
+    /**
+     * Creates a Resource and adds it to the database.
+     */
     private void add() {
     	
     	Resource newResource = new Resource();

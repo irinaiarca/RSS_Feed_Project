@@ -19,7 +19,9 @@ public class Runner extends Application {
     public PubSub mediator = new PubSub();
     
     @PersistenceContext public EntityManager entityManager;
-
+    /**
+     * Verifies if the stage already exists and, if it doesn't, it creates it. If it already exists, nothing happens.
+     */
     void setUp() {
     	if (entityManager != null) return;
     	

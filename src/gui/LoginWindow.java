@@ -47,6 +47,9 @@ public class LoginWindow implements EventHandler<ActionEvent> {
 		setupPanel(stage);
 	}
 	
+	/**
+	 * An auxiliary function that hooks certain methods to global events.
+	 */
 	private void hookEvents() {
 		LoginWindow self = this;
 		runner.mediator.subscribe(new String[]{"mainwindow.close", "loginwindow.invalidate"}, new util.PubSubHandler() {
@@ -120,6 +123,10 @@ public class LoginWindow implements EventHandler<ActionEvent> {
 	}
 
 	@Override
+	/**
+	 * Searched for the user in the database. If both the username and the password 
+	 * match, the user is logged in and the main window is opened.
+	 */
 	public void handle(ActionEvent arg0) {
 
     	
@@ -153,6 +160,9 @@ public class LoginWindow implements EventHandler<ActionEvent> {
     	
 	}
 	
+	/**
+	 * Logs off the user.
+	 */
 	public void reset() {
 		runner.currentId = null;
 		runner.loggedUser = null;
