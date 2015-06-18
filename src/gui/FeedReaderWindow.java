@@ -16,11 +16,14 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
@@ -28,6 +31,9 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
 //import javax.xml.stream.events.Comment;
+
+
+
 
 import util.PubSubHandler;
 import model.Comment;
@@ -54,6 +60,7 @@ public class FeedReaderWindow {
 	private NewsArticle activeArticle;
 	private HashMap<String,NewsArticle> articleList;
 	private TextArea commentSection, commentBox, articleContent;
+	private WebView articleWebContent;
 
 	
 	public FeedReaderWindow() {
@@ -135,13 +142,24 @@ public class FeedReaderWindow {
   
         list.setPrefWidth(200);
         list.setPrefHeight(300);
-                          
-
+        
         articleContent = new TextArea("\n\n\t\t\t\tClick on an item in the list on the left side to read news.");
         articleContent.setPrefWidth(600);
         articleContent.setEditable(false);
         articleContent.setWrapText(true);
-        gridMain.add(articleContent, 1, 2);
+        
+        articleWebContent = new WebView();
+
+        TabPane tabPane = new TabPane();
+        Tab tab = new Tab();
+        tab.setContent(articleContent);
+        tab.setText("Description");
+        tabPane.getTabs().add(tab);
+        tab = new Tab();
+        tab.setContent(articleWebContent);
+        tab.setText("Article");
+        tabPane.getTabs().add(tab);
+        gridMain.add(tabPane, 1, 2);
 
         
         list.setOnMouseClicked(new EventHandler<MouseEvent>() {
@@ -151,8 +169,9 @@ public class FeedReaderWindow {
         	{
 
         		String content = list.getSelectionModel().getSelectedItem().toString();
-        		articleContent.setText(content);
         		activeArticle = articleList.get(content);
+        		articleContent.setText(activeArticle.getDescription());
+        		articleWebContent.getEngine().load(activeArticle.getSourceAddress());
         		runner.mediator.publish("comments.refresh");
         	}
         });
@@ -311,8 +330,12 @@ public class FeedReaderWindow {
     		aList = getFeed.getResultList();
     		for(NewsArticle f : aList)
     		{
-    			articleList.put(f.getDescription(), f);
-    			aux.add(f.getDescription());
+    			String title = f.getTitle();
+    			if (title.equals("")) {
+    				title = f.getDescription();
+    			}
+    			articleList.put(title, f);
+    			aux.add(title);
     		}
     		items = FXCollections.observableArrayList(aux);
     	} catch (NoResultException ex) {

@@ -197,11 +197,15 @@ public class AddArticleWindow {
 			}
 		}
 		
+		System.out.println(selectedArticle);
+		
 		NewsArticle newArticle  = new NewsArticle();
 		newArticle.setUser(runner.loggedUser);
 		
 		newArticle.setDescription(selectedArticle.getDescription());
 		newArticle.setSource(selectedArticle.getAuthor());
+		newArticle.setTitle(selectedArticle.getTitle());
+		newArticle.setSourceAddress(selectedArticle.getLink());
 		
 		System.out.println(newArticle.getUser().getIdUser());
 		System.out.println(newArticle.getIdNews());

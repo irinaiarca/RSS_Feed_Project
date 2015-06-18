@@ -26,6 +26,8 @@ public class NewsArticle implements Serializable {
 	private String description;
 
 	private String source;
+	private String sourceAddress;
+	private String title;
 
 	//bi-directional many-to-one association to Comment
 	@OneToMany(mappedBy="newsArticle")
@@ -82,6 +84,22 @@ public class NewsArticle implements Serializable {
 
 	public void setSource(String source) {
 		this.source = source;
+	}
+
+	public String getSourceAddress() {
+		return this.sourceAddress;
+	}
+
+	public void setSourceAddress(String source) {
+		this.sourceAddress = source;
+	}
+
+	public String getTitle() {
+		return this.title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
 	}
 
 	public List<Comment> getComments() {
