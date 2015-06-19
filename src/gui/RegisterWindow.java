@@ -1,5 +1,7 @@
 package gui;
 
+import java.util.List;
+
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -19,6 +21,7 @@ import javafx.stage.WindowEvent;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+import exceptions.InvalidUserException;
 import util.PubSubHandler;
 import model.User;
 
@@ -107,17 +110,20 @@ public class RegisterWindow implements EventHandler<ActionEvent> {
 	public void handle(ActionEvent arg0) {
 		try {
 			String user = userField.getText(), pass = passField.getText();
+
+    		if (!user.matches("^[a-zA-Z0-9\\.-_]+$")) {
+    			throw new InvalidUserException("The username is invalid");
+    		}
+    		if (!pass.matches("^[a-zA-Z0-9]+$")) {
+    			throw new InvalidUserException("The password is invalid");
+    		}
 			
 			Query q = em.createQuery("SELECT u FROM User u WHERE u.username =\'" + user + "\'");
-			
-			User u;
-			try {
-				u = (User) q.getSingleResult();
-			} catch (Exception e) {
-				u = null;
-			}
-			
-			if (u == null) {
+
+    		List<User> foundUsers = q.getResultList();
+    		System.out.println(foundUsers.size());
+    		if (foundUsers.size() == 0){
+    			User u = foundUsers.get(0);
 				
 				em.getTransaction().begin();
 				
@@ -130,16 +136,13 @@ public class RegisterWindow implements EventHandler<ActionEvent> {
 				em.getTransaction().commit();
 				
 				showMessage("User successfully added!");
-				
-			} else {
-				(new AlertWindow()).message("This username already exists!").handle(new EventHandler<WindowEvent>() {
-					@Override
-					public void handle(WindowEvent arg0) {
-						userField.setText("");
-						passField.setText("");
-					}
-				}).show();
-			}
+    		} else {
+    			throw new InvalidUserException("This user already exists!");
+    		}
+		}
+		catch (InvalidUserException e) {
+			showMessage(e.getMessage());
+			System.out.println(e);
 		}
 		catch (Exception e) {
 			showMessage("An error has occurred!");

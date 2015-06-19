@@ -2,9 +2,13 @@ package gui;
 
 import static javafx.geometry.HPos.RIGHT;
 
+import java.util.List;
+
+import javax.activity.InvalidActivityException;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+import exceptions.InvalidUserException;
 import model.User;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -132,25 +136,46 @@ public class LoginWindow implements EventHandler<ActionEvent> {
     	
     	String currentUser = userField.getText();
     	String currentPwd = passField.getText();
-  
-    	Query q = em.createQuery("SELECT usr FROM User usr WHERE usr.username=\'" + currentUser + "\' and usr.password=\'" + currentPwd + "\'");
     	    	
     	try {
-    		User foundUser = (User)q.getSingleResult();
-    		if (foundUser != null) {
-    			
+
+    		if (!currentUser.matches("^[a-zA-Z0-9-_]+$")) {
+    			throw new InvalidUserException("The username is invalid");
+    		}
+    		if (!currentPwd.matches("^[a-zA-Z0-9]+$")) {
+    			throw new InvalidUserException("The password is invalid");
+    		}
+        	Query q = em.createQuery("SELECT usr FROM User usr WHERE usr.username=\'" + currentUser + "\' and usr.password=\'" + currentPwd + "\'");	
+    	
+    		List<User> foundUsers = q.getResultList();
+    		if (foundUsers.size() == 0){
+    			throw new InvalidUserException("There are no such users");
+    		} else if (foundUsers.size() > 1) {
+    			throw new InvalidUserException("There are more than one users");
+    		} else {
     			runner.mediator.publish("loginwindow.invalidate");
-				runner.loggedUser = foundUser;
-				runner.currentId = foundUser.getIdUser();
+				runner.loggedUser = foundUsers.get(0);
+				runner.currentId = foundUsers.get(0).getIdUser();
+			
+
 				
 				if (mainWindow == null) mainWindow = new FeedReaderWindow();
 				runner.mediator.publish("user.login");
 				
 				stage.hide();
-    		} else { throw new Exception("Still not returned any users!"); }
+    		}
+    	} catch (InvalidUserException ex) {
+    		
+    		(new AlertWindow()).message(ex.getMessage()).handle(new EventHandler<WindowEvent>() {
+    			@Override
+    			public void handle(WindowEvent arg0) {
+    				runner.mediator.publish("loginwindow.invalidate");
+    			}
+    		}).show();
+    		
     	} catch (Exception ex) {
     		
-    		(new AlertWindow()).message("No such user has been found").handle(new EventHandler<WindowEvent>() {
+    		(new AlertWindow()).message("An unexpected error has occurred!").handle(new EventHandler<WindowEvent>() {
     			@Override
     			public void handle(WindowEvent arg0) {
     				runner.mediator.publish("loginwindow.invalidate");

@@ -110,7 +110,21 @@ public class AddFriendsWindow implements EventHandler<ActionEvent> {
         
         queryHolder = getNonFriends.getResultList();
         queryHolder.remove(runner.loggedUser);
-        queryHolder.remove(runner.loggedUser.getFriends());                             
+        for (Friend f: runner.loggedUser.getFriends()) {
+        	Query q = em.createQuery("SELECT u FROM User u WHERE u.idUser =\'" + f.getIdFriends() + "\'");
+        	User u = null;
+        	try {
+        		u = (User) q.getSingleResult();
+        	} catch (Exception e) {
+        		System.out.println("Invalid friend connection: \n" + e.getMessage());
+        	}
+        	if (u != null) {
+        		queryHolder.remove(u);
+        	}
+        }
+    	Query q = em.createQuery("SELECT u FROM User u WHERE u.idUser =\'" + runner.loggedUser.getIdUser() + "\'");
+		User u = (User) q.getSingleResult();
+		queryHolder.remove(u);
         
         ObservableList<String> options = FXCollections.observableArrayList();
         
