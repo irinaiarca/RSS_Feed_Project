@@ -23,7 +23,7 @@ public class User implements Serializable {
 	private String username;
 
 	//bi-directional many-to-one association to Friend
-	@OneToMany(mappedBy="user")
+	@OneToMany(mappedBy="user", fetch=FetchType.EAGER)
 	private List<Friend> friends;
 
 	//bi-directional many-to-one association to Resource
