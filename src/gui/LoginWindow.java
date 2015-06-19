@@ -138,10 +138,10 @@ public class LoginWindow implements EventHandler<ActionEvent> {
     	try {
     		User foundUser = (User)q.getSingleResult();
     		if (foundUser != null) {
+    			
     			runner.mediator.publish("loginwindow.invalidate");
 				runner.loggedUser = foundUser;
 				runner.currentId = foundUser.getIdUser();
-			
 				
 				if (mainWindow == null) mainWindow = new FeedReaderWindow();
 				runner.mediator.publish("user.login");
